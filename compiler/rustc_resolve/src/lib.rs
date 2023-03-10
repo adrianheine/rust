@@ -1860,8 +1860,11 @@ impl<'a, 'tcx> Resolver<'a, 'tcx> {
                 // replacing `crate` with `self` and changing the current module should achieve
                 // the same effect.
                 segment.ident.name = kw::SelfLower;
-                parent_scope.module =
-                    self.expect_module(parent_scope.module.def_id().krate.as_def_id());
+                let mut new_parent = parent_scope.module;
+                while matches!(new_parent.kind, ModuleKind::Block) {
+                    new_parent = new_parent.parent.unwrap();
+                }
+                parent_scope.module = self.expect_module(new_parent.def_id().krate.as_def_id());
             } else if segment.ident.name == kw::Empty {
                 segment.ident.name = kw::PathRoot;
             }
